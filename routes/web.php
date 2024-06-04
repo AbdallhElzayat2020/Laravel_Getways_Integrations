@@ -11,17 +11,13 @@
     |
     */
 
-    use App\Http\Controllers\Dashboard\SettingController;
+    use App\Http\Controllers\Gatways\PaypalController;
     use Illuminate\Support\Facades\Route;
-    
+
     Route::get('/' , function () {
-        return view('dashboard.index');
+        return view('welcome');
     });
 
-    Route::prefix('dashboard')->group(function () {
-        Route::get('/settings' , function () {
-            return view('dashboard.settings');
-            // echo 'Settings';
-        })->name('dashboard.settings');
-        Route::post('/settings/update' , [ SettingController::class , 'update' ])->name('setting.update');
-    });
+    Route::post('paypal/payment' , [ PaypalController::class , 'payment' ])->name('paypal.payment');
+    Route::get('paypal/success' , [ PaypalController::class , 'success' ])->name('paypal.success');
+    Route::get('paypal/cancel' , [ PaypalController::class , 'cancel' ])->name('paypal.cancel');
