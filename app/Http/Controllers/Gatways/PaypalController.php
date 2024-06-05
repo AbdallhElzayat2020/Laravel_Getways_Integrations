@@ -1,68 +1,68 @@
 <?php
 
-namespace App\Http\Controllers\Gatways;
+    namespace App\Http\Controllers\Gatways;
 
-use Illuminate\Http\Request;
-use App\Http\Controllers\Controller;
-use Srmklive\PayPal\Services\PayPal as PayPalClient;
+    use Illuminate\Http\Request;
+    use App\Http\Controllers\Controller;
+    use Srmklive\PayPal\Services\PayPal as PayPalClient;
 
-class PaypalController extends Controller
-{
-    public function payment(Request $request)
+    class PaypalController extends Controller
     {
-        $provider = new PayPalClient;
-        $provider->setApiCredentials(config('paypal'));
-        $paypalToken = $provider->getAccessToken();
-        $response = $provider->createOrder([
-            'intent' => 'CAPTURE',
-            'application_context' => [
-                'return_url' => route('paypal.success'),
-                'cancel_url' => route('paypal.cancel'),
-            ],
-            'purchase_units' => [
-                [
-                    'amount' => [
-                        'currency_code' => 'USD',
-                        'value' => $request->price,
-                    ],
-                ],
-            ],
-        ]);
+        public function payment( Request $request )
+        {
+            $provider = new PayPalClient;
+            $provider->setApiCredentials(config('paypal'));
+            $paypalToken = $provider->getAccessToken();
+            $response = $provider->createOrder([
+                'intent' => 'CAPTURE' ,
+                'application_context' => [
+                    'return_url' => route('paypal.success') ,
+                    'cancel_url' => route('paypal.cancel') ,
+                ] ,
+                'purchase_units' => [
+                    [
+                        'amount' => [
+                            'currency_code' => 'USD' ,
+                            'value' => $request->price ,
+                        ] ,
+                    ] ,
+                ] ,
+            ]);
 
-        // dd($response);
+            dd($response);
 
-        if (isset($response['id']) && $response['id'] != null) {
+            if (isset($response['id']) && $response['id'] != null) {
 
-            foreach ($response['links'] as $link) {
+                foreach ($response['links'] as $link) {
 
-                if ($link['rel'] === 'approve') {
-                    return redirect()->away($link['href']);
+                    if ($link['rel'] === 'approve') {
+                        return redirect()->away($link['href']);
+                    }
                 }
+            } else {
+                return redirect()->route('paypal.cancel');
             }
-        } else {
+
+        }
+
+        public function success( Request $request )
+        {
+            $provider = new PayPalClient;
+
+            $provider->setApiCredentials(config('paypal'));
+
+            $paypalToken = $provider->getAccessToken();
+
+            $response = $provider->capturePaymentOrder($request->token);
+
+            if (isset($response['status']) && $response['status'] == 'COMPLETED') {
+                return 'Paid Successfully!';
+            }
             return redirect()->route('paypal.cancel');
         }
 
-    }
-
-    public function success(Request $request)
-    {
-        $provider = new PayPalClient;
-
-        $provider->setApiCredentials(config('paypal'));
-
-        $paypalToken = $provider->getAccessToken();
-
-        $response = $provider->capturePaymentOrder($request->token);
-
-        if (isset($response['status']) && $response['status'] == 'COMPLETED') {
-            return 'Paid Successfully!';
+        public function cancel()
+        {
+            return 'Paymnet faild';
         }
-        return redirect()->route('paypal.cancel');
     }
-
-    public function cancel()
-    {
-        return 'Paymnet faild';
-    }
-}
