@@ -58,11 +58,8 @@ class PaypalController extends Controller
         if (isset($response['status']) && $response['status'] == 'COMPLETED') {
             return 'Paid Successfully!';
         }
-
         return redirect()->route('paypal.cancel');
-
     }
-
 
     public function cancel()
     {
